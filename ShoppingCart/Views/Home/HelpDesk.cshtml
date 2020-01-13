@@ -1,0 +1,62 @@
+﻿
+@{
+    ViewBag.Title = "HelpDesk";
+    Layout = "~/Views/Shared/_LayoutNew.cshtml";
+}
+
+<script type="text/javascript">
+    function getHelp() {
+        var elem1 = document.getElementById("chatoutput");
+        var elem2 = document.getElementById("chatinput");
+        var output = $.trim(elem1.value);
+        if (output != "") {
+            if (elem2.value.length > 0)
+                elem2.value += "\n";
+            elem2.value += "[ You asked: " + output + " ]\n";
+            var elem3 = $('#chatinput');
+            elem3.scrollTop(elem3[0].scrollHeight - elem3.height());
+            $('#chatinput').focus(function () { $('#chatoutput').focus(); })
+            $.ajax({
+                type: "POST",
+                url: '/Home/AnswerQuestion',
+                data: { sentence: output },
+                cache: false,
+                success: function (response) {
+                    if (response != "") {
+                        var elem1 = document.getElementById("chatinput");
+                        elem1.value += response + '\n';
+                        var elem2 = $('#chatinput');
+                        elem2.scrollTop(elem2[0].scrollHeight - elem2.height());
+                        $('#chatinput').focus(function () { $('#chatoutput').focus(); })
+                    }
+                },
+                error: function (e) {
+                    alert('Error: ' + e.responseText);
+                }
+            });
+        }
+        elem1.value = "";
+    }
+</script>
+
+<h2>@Html.Raw(ViewBag.Message)</h2>
+
+<p></p>
+<b>@Html.Raw(ViewBag.Message2)</b><br />
+@Html.TextArea("inputarea",
+          "We're here to help you. Type in your question:\n\n",
+                  new
+                  {
+                      id = "chatinput",
+                      cols = "80",
+                      rows = "10",
+                      @readonly = "readonly"
+                  })
+<p></p>
+<b>@Html.Raw(ViewBag.Message3)</b><br />
+@Html.TextBox("outputarea", null, new { id = "chatoutput", style = "width:300px" })
+<button type="button" onclick="getHelp()">
+    Get Help
+    Desk Response
+</button>
+

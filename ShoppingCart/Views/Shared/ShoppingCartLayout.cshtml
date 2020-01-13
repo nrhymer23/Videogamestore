@@ -1,0 +1,187 @@
+﻿@inherits WebViewPage<IEnumerable<ShoppingCart.Models.Product>>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - My Shopping Cart Application</title>
+    <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+    <script src="/Scripts/jquery-1.10.2.js" type="text/javascript"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var currentTab = window.location.pathname;
+            if (currentTab == null || currentTab.split("/").length < 3)
+                currentTab = "Index";
+            else {
+                currentTab = (currentTab.split("/"))[2];
+                if (currentTab.length == 0)
+                    currentTab = "Index";
+            }
+            $.ajax({
+                type: "GET",
+                url: "/Home/GetTabs/" + currentTab,
+                success: function (response) {
+                    var off = response.indexOf(":");
+                    var head = "";
+                    var tabs = "";
+                    if (off == -1)
+                        tabs = response;
+                    else {
+                        head = response.substring(0, off);
+                        tabs = response.substring(off + 1);
+                    }
+                    $("#headcontainer").html(head);
+                    $("#menucontainer").html(tabs);
+                },
+                error: function (e) {
+                    alert("Error: " + e.responseText);
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="page">
+        <div class="navbar navbar-inverse navbar-fixed-top" style="background-image: url('/Images/background7.jpg')">
+            <div class="container">
+                <div class="navbar-header">
+                    <div id="headcontainer">
+                    </div>
+                    <div id="menucontainer">
+                    </div>
+                    <div class="navbar-collapse collapse">
+                    </div>
+                </div>
+                @Html.Partial("_LoginPartial")
+            </div>
+        </div>
+
+        <div class="container body-content">
+            <div id="body">
+                @RenderSection("featured", required: false)
+                <section class="content-wrapper main-content clear-fix">
+                    @RenderBody()
+                </section>
+                @{ using (Html.BeginForm())
+                    {
+                        @Html.ValidationSummary(true);
+
+                int itemNo = 0;
+                        <table>
+                            <tr>
+                                <td style="text-align:center"><b>Item Image</b></td>
+                                <td style="text-align:center"><b>Price Per Item</b></td>
+                                <td style="text-align:center"><b>Order Amount</b></td>
+                            </tr>
+
+                            @foreach (var item in Model)
+                            {
+                                ++itemNo;
+                                <tr>
+                                    @{ if (String.IsNullOrWhiteSpace(item.ProductName) &&
+                     String.IsNullOrWhiteSpace(item.ImageFile))
+                                        {
+                                            <td style="text-align:center">[No Image]</td>
+                                        }
+                                        else
+                                        {
+                                            <td style="text-align:center">
+                                                @{ if (!String.IsNullOrWhiteSpace(item.ProductName))
+                                                    {
+                                                        if (!String.IsNullOrWhiteSpace(item.ImageFile))
+                                                        {
+                                                            <b>@item.ProductName:</b><br /><br />
+                                                        }
+                                                        else
+                                                        {
+                                                            <b>@item.ProductName</b>
+                                                        }
+                                                    }
+                                                }
+                                                @{ if (!String.IsNullOrWhiteSpace(item.ImageFile))
+                                                    {
+                                                        <img src="/Images/@item.ImageFile.Trim()" alt="Store Product Image" />
+                                                    }
+                                                }
+                                            </td>
+                                                    }
+                                    }
+                                    <td style="text-align:center"><b>$ @item.UnitPrice</b></td>
+
+                                    <td style="text-align:center">
+                                        @{ if (item.MaxAmount == 0)
+                                            {
+                                                <text>[This item is not available]</text>
+                                            }
+                                            else if (item.MaxAmount > 0)
+                                            {
+                                                <b>Amount of this item: </b>
+                                                int defaultValue = Convert.ToInt32(ViewData["DefaultChoice" + itemNo].ToString());
+                                                string listName = "ListItems" + itemNo;
+                                                <select name="@listName">
+                                                    @{ for (int index = 0; index <= item.MaxAmount; ++index)
+                                                        {
+                                                            <option @{ if (index == defaultValue) { <text> selected</text> } }>
+                                                                @index
+                                                            </option>
+    }
+                                                    }
+                                                </select>
+    }
+    else
+    {
+        <b>Amount of this item: </b>
+        string listName = "ListItems" + itemNo;
+        <input type="text" name="@listName"
+               value="@ViewData["DefaultChoice" + itemNo]"
+               style="border-style: solid; background: #bef; width: 30px;" />
+    }
+                                        }
+                                    </td>
+                                </tr>
+    }
+
+                            @{ if (itemNo == 0)
+                                {
+                                    <tr>
+                                        <td style="width:100px;">&nbsp;</td>
+                                        <td style="width:300px;">&nbsp;</td>
+                                        <td style="width:300px;">&nbsp;</td>
+                                    </tr>
+                                }
+                            }
+                        </table>
+
+                                if (itemNo == 0)
+                                {
+                                    <p style="color:#800080">
+                                        <i><b>There Are No Products Available In This Category At This Time.</b></i>
+                                    </p>
+                                }
+
+                                <input type="submit" value="Save And Go To Next Item" name="button"
+                                       style="font-size: 10pt" />
+                                <input type="submit" value="Save And Go To Checkout" name="button"
+                                       style="font-size: 10pt" />
+                                }
+                }
+
+            </div>
+            <footer>
+                <div class="content-wrapper">
+                    <div class="float-left">
+                        <p>&copy; @DateTime.Now.Year - My Shopping Cart Application</p>
+                    </div>
+                </div>
+            </footer>
+
+            @Scripts.Render("~/bundles/jquery")
+            @RenderSection("scripts", required: false)
+        </div>
+    </div>
+</body>
+</html>
